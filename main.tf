@@ -380,10 +380,24 @@ resource "aws_instance" "ignore_ami" {
 # Spot Instance
 ################################################################################
 
-resource "aws_spot_instance_request" "this" {
+resource "aws_instance" "spot" {
   count = local.create && var.create_spot_instance ? 1 : 0
 
   ami                  = local.ami
+  
+  # Spot instance specific attributes via instance_market_options
+  # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance#market-options
+  instance_market_options {
+    market_type = spot # default value
+    spot_options {
+      instance_interruption_behavior = var.spot_instance_interruption_behavior
+      max_price                      = var.spot_price
+      spot_instance_type             = var.spot_type
+      valid_until                    = var.spot_valid_until
+    }
+  }
+  # End Spot instance specific attributes via instance_market_options
+
   instance_type        = var.instance_type
   cpu_core_count       = var.cpu_core_count
   cpu_threads_per_core = var.cpu_threads_per_core
@@ -410,17 +424,6 @@ resource "aws_spot_instance_request" "this" {
 
   ebs_optimized = var.ebs_optimized
 
-  # Spot request specific attributes
-  spot_price                     = var.spot_price
-  wait_for_fulfillment           = var.spot_wait_for_fulfillment
-  spot_type                      = var.spot_type
-  launch_group                   = var.spot_launch_group
-  block_duration_minutes         = var.spot_block_duration_minutes
-  instance_interruption_behavior = var.spot_instance_interruption_behavior
-  valid_until                    = var.spot_valid_until
-  valid_from                     = var.spot_valid_from
-  # End spot request specific attributes
-
   dynamic "cpu_options" {
     for_each = length(var.cpu_options) > 0 ? [var.cpu_options] : []
 
@@ -439,6 +442,7 @@ resource "aws_spot_instance_request" "this" {
 
       dynamic "capacity_reservation_target" {
         for_each = try([capacity_reservation_specification.value.capacity_reservation_target], [])
+
         content {
           capacity_reservation_id                 = try(capacity_reservation_target.value.capacity_reservation_id, null)
           capacity_reservation_resource_group_arn = try(capacity_reservation_target.value.capacity_reservation_resource_group_arn, null)
@@ -510,6 +514,16 @@ resource "aws_spot_instance_request" "this" {
     }
   }
 
+  dynamic "private_dns_name_options" {
+    for_each = length(var.private_dns_name_options) > 0 ? [var.private_dns_name_options] : []
+
+    content {
+      hostname_type                        = try(private_dns_name_options.value.hostname_type, null)
+      enable_resource_name_dns_a_record    = try(private_dns_name_options.value.enable_resource_name_dns_a_record, null)
+      enable_resource_name_dns_aaaa_record = try(private_dns_name_options.value.enable_resource_name_dns_aaaa_record, null)
+    }
+  }
+
   dynamic "launch_template" {
     for_each = length(var.launch_template) > 0 ? [var.launch_template] : []
 
@@ -520,12 +534,21 @@ resource "aws_spot_instance_request" "this" {
     }
   }
 
+  dynamic "maintenance_options" {
+    for_each = length(var.maintenance_options) > 0 ? [var.maintenance_options] : []
+
+    content {
+      auto_recovery = try(maintenance_options.value.auto_recovery, null)
+    }
+  }
+
   enclave_options {
     enabled = var.enclave_options_enabled
   }
 
   source_dest_check                    = length(var.network_interface) > 0 ? null : var.source_dest_check
   disable_api_termination              = var.disable_api_termination
+  disable_api_stop                     = var.disable_api_stop
   instance_initiated_shutdown_behavior = var.instance_initiated_shutdown_behavior
   placement_group                      = var.placement_group
   tenancy                              = var.tenancy
@@ -537,6 +560,7 @@ resource "aws_spot_instance_request" "this" {
 
   timeouts {
     create = try(var.timeouts.create, null)
+    update = try(var.timeouts.update, null)
     delete = try(var.timeouts.delete, null)
   }
 

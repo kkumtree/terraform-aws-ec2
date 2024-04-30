@@ -310,7 +310,7 @@ variable "spot_wait_for_fulfillment" {
 }
 
 variable "spot_type" {
-  description = "If set to one-time, after the instance is terminated, the spot request will be closed. Default `persistent`"
+  description = "If set to one-time, after the instance is terminated, the spot request will be closed. Default `one-time` [docs/resources/instance#spot-options]" 
   type        = string
   default     = null
 }

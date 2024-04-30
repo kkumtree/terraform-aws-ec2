@@ -1,4 +1,13 @@
-# AWS EC2 Instance Terraform module
+# CAUTION  
+
+- Original Repo(v5.6.1): [GitHub](https://github.com/terraform-aws-modules/terraform-aws-ec2-instance), [Terraform Registry](https://registry.terraform.io/modules/terraform-aws-modules/ec2-instance/aws)  
+
+- It is just for Spot instance Tagging!  
+  - Resource CHANGED: [`aws_spot_instance_request` -> `aws_ec2_instance`]
+  - Output REMOVED: [`spot_bid_status`, `spot_request_state`, `spot_instance_id`]
+  - Output ADDED: [`instance_lifecycle`, `spot_instance_request_id`]
+
+## AWS EC2 Instance Terraform module
 
 Terraform module which creates an EC2 instance on AWS.
 
