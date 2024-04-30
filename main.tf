@@ -388,7 +388,7 @@ resource "aws_instance" "spot" {
   # Spot instance specific attributes via instance_market_options
   # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance#market-options
   instance_market_options {
-    market_type = spot # default value
+    market_type = "spot" # default value
     spot_options {
       instance_interruption_behavior = var.spot_instance_interruption_behavior
       max_price                      = var.spot_price
